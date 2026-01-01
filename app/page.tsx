@@ -8,7 +8,7 @@ import { Heart, HeartCrack, Gift, Timer, Sparkles, ChevronDown, Check, ArrowRigh
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1453355902966173791/doAy_bp6NrxJowi8U99xFrEYrLpH7VciBcXJKfI35W_wY6_mWjJy_U-Tm8X8ZR-2ddTT";
 const BEAR_GIF_SRC = "/milk-and-mocha.gif";
 const SHY_GIF_SRC = "/milkmocha-shy.gif";
-const BACKGROUND_IMAGE_SRC = "/asdf.avif";
+const BACKGROUND_IMAGE_SRC = "/Pink background.jpg";
 const BRIGHT_RED = "#ff0000"; 
 const BRIGHT_HOVER = "#cc0000";
 
