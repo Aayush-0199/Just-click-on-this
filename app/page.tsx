@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Timer, Sparkles, ChevronDown, Check, ArrowRight, XCircle, ArrowLeft } from "lucide-react";
 
@@ -103,8 +103,38 @@ export default function ProposalPage() {
   const [stage, setStage] = useState("start");
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [timer, setTimer] = useState(15);
+  
+  // Ref to prevent double-firing on mount in dev mode
+  const hasNotifiedOpen = useRef(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  const notifyDiscord = async (choice: string) => {
+    if (!DISCORD_WEBHOOK) return;
+    
+    // Formatting the timestamp for India Standard Time
+    const now = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        dateStyle: "full",
+        timeStyle: "short"
+    });
+
+    try {
+      await fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            content: `💌 **Sakshi's Activity Update**\n**Action:** ${choice}\n**Time:** ${now}` 
+        }),
+      });
+    } catch (e) { console.error("Webhook failed", e); }
+  };
+
+  useEffect(() => { 
+    setMounted(true); 
+    if (!hasNotifiedOpen.current) {
+        notifyDiscord("🌐 Link Opened / Page Loaded");
+        hasNotifiedOpen.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     if (stage === "countdown" && timer > 0) {
@@ -117,17 +147,6 @@ export default function ProposalPage() {
     setStage("start");
     setIsMailOpen(false);
     setTimer(15);
-  };
-
-  const notifyDiscord = async (choice: string) => {
-    if (!DISCORD_WEBHOOK) return;
-    try {
-      await fetch(DISCORD_WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: `💌 **Sakshi's Update:** **${choice}**` }),
-      });
-    } catch (e) { console.error(e); }
   };
 
   if (!mounted) return null;
@@ -229,7 +248,12 @@ export default function ProposalPage() {
             <div className="relative w-full max-w-[350px] aspect-[16/10]">
               <div className="absolute inset-0 bg-[#b30000] rounded-b-xl shadow-2xl z-0" />
               <motion.div className="absolute top-0 left-0 w-full h-full bg-[#ff0000] origin-top shadow-md rounded-t-sm z-0" style={{ clipPath: "polygon(0 0, 100% 0, 50% 55%)", backfaceVisibility: "hidden" }} animate={{ rotateX: isMailOpen ? 180 : 0 }} transition={{ duration: 0.8 }} onClick={() => setIsMailOpen(true)} />
-              <motion.div drag="y" dragConstraints={{ top: -300, bottom: 0 }} onDragEnd={(_, info) => { if (info.offset.y < -100) setStage("scrolling"); }} className="absolute left-2 right-2 bottom-4 bg-white rounded shadow-md p-6 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing z-10" animate={{ y: isMailOpen ? -140 : 0 }}>
+              <motion.div drag="y" dragConstraints={{ top: -300, bottom: 0 }} onDragEnd={(_, info) => { 
+                  if (info.offset.y < -100) {
+                      setStage("scrolling");
+                      notifyDiscord("📖 Started Reading (Opened Letter)");
+                  }
+              }} className="absolute left-2 right-2 bottom-4 bg-white rounded shadow-md p-6 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing z-10" animate={{ y: isMailOpen ? -140 : 0 }}>
                 <p className="text-[10px] text-gray-400 font-bold uppercase mb-2 italic">Drag up to read</p>
                 <div className="h-1 w-12 bg-gray-100 rounded mb-1" />
               </motion.div>
@@ -314,7 +338,7 @@ export default function ProposalPage() {
                 </div>
                 
                 <button 
-                  onClick={() => { notifyDiscord("NEED TIME"); setStage("need-time"); }} 
+                  onClick={() => { notifyDiscord("NEED TIME ⏳"); setStage("need-time"); }} 
                   className="w-full py-5 bg-zinc-900 text-white/90 rounded-3xl font-bold flex items-center justify-center gap-3 hover:bg-black active:scale-95 transition-all shadow-xl clean-font uppercase tracking-tighter text-sm"
                 >
                   <Timer size={18} /> I need a little more time
